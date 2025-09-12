@@ -8,6 +8,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.13,<4.0"
 fastapi = {extras = ["standard"], version = "^0.116.1"}
+sqlalchemy = "^2.0.43"
+pydantic-settings = "^2.10.1"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 from fastapi_zero.app import app
 from http import HTTPStatus
-from tests.conftest import client
 # Transformou o app do app.py em cliente pro nosso test
 # Para podermos conversar com ele(app.py)
 
@@ -17,7 +16,7 @@ from tests.conftest import client
 # Garantir que A é A, garanta que a resposta deu certo de acordo com meus parametros
 
 
-def test_root_deve_retornar_ola_mundo():
+def test_root_deve_retornar_ola_mundo(client):
     # Arrange
     # client = TestClient(app)
 
@@ -31,7 +30,7 @@ def test_root_deve_retornar_ola_mundo():
     assert response.status_code == HTTPStatus.OK
 
 
-def test_getHtml_deve_retornar_html():
+def test_getHtml_deve_retornar_html(client):
     # client = TestClient(app)
 
     response = client.get('/htmlEndPoint')
@@ -40,7 +39,7 @@ def test_getHtml_deve_retornar_html():
     assert '<h1> Olá Mundo</h1>' in response.text
 
 
-def test_create_user():
+def test_create_user(client):
     # client = TestClient(app)
 
     response = client.post(
@@ -60,7 +59,7 @@ def test_create_user():
     }
 
 
-def test_read_users():
+def test_read_users(client):
     response = client.get('/users')
 
     assert response.json() == {
@@ -75,7 +74,7 @@ def test_read_users():
     assert response.status_code == HTTPStatus.OK
 
 
-def test_update_user():
+def test_update_user(client):
     response = client.put(
         '/users/1',
         json={
@@ -94,7 +93,7 @@ def test_update_user():
     assert response.status_code == HTTPStatus.OK
     
     
-def test_delete_user():
+def test_delete_user(client):
     response = client.delete(
         '/users/1'
     )
@@ -108,7 +107,7 @@ def test_delete_user():
     assert response.status_code == HTTPStatus.OK    
     
     
-def test_delete_user_error_validation():
+def test_delete_user_error_validation(client):
     response = client.delete(
         'users/-10'
     )
@@ -118,7 +117,7 @@ def test_delete_user_error_validation():
     
 
 
-def test_update_user_error_validation():
+def test_update_user_error_validation(client):
     response = client.put(
         'users/-10',
         json={
