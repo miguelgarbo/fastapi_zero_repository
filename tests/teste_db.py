@@ -21,11 +21,10 @@ def test_create_user(session, mock_db_time):
     
     #Asdict tranforma o data class em dicionario
     assert asdict(user) == {
-        
         'id':1,
         'username':'test',
         'email':'test@gmail.com',
         'password': 'secret',
-        'createdAt': time
-        
+        'createdAt': time,
+        'updatedAt': time
     }

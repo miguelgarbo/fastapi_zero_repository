@@ -10,6 +10,7 @@ python = "^3.13,<4.0"
 fastapi = {extras = ["standard"], version = "^0.116.1"}
 sqlalchemy = "^2.0.43"
 pydantic-settings = "^2.10.1"
+alembic = "^1.16.5"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -23,6 +24,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 #Define o maximo de colunas que uma linha de codigo deve ter 
+#Como o migrations é um arquivo criado automaticamente, o task tool deve ignrolado
 [tool.ruff]
 line-length = 79
 extend-exclude = ['migrations']

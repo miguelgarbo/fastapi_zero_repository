@@ -45,6 +45,12 @@ from contextlib import contextmanager
 def _mock_db_time(*,model=User, time=datetime.datetime(2025,5,20)):
     
     def fake_time_hook(mapper, connection, target):
+        
+        if hasattr(target, 'updated_at'):
+            
+            target.updated_at = time
+        
+        
         #Aqui validamos se esse objeto tem o atributo, created at
         if hasattr(target, 'created_at'):
             
