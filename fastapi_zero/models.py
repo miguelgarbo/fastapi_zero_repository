@@ -2,9 +2,8 @@ from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, registry
 
-#ISso vai registrar as coisas que serao mapeadas entre a aplicacao, as tabelas python e as tabelas do banco
+#Isso vai registrar as coisas que serao mapeadas entre a aplicacao, as tabelas python e as tabelas do banco
 table_registry = registry()
-
 
 @table_registry.mapped_as_dataclass
 class User():

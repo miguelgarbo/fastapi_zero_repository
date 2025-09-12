@@ -1,6 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-#Vamos Tirar a configuração do banco e mandar pro .env
+
+#Aqui está configurando o caminho do nosso banco de dados
+#Onde essa função traz o aquivo env onde nossa url do banco está
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict( 

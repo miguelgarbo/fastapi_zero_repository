@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from http import HTTPStatus
 import fastapi.responses as response
 import fastapi_zero.schemas as schema
+from fastapi_zero.models import User
 
 app = FastAPI(title='API To Do')
 
@@ -42,12 +43,24 @@ def get_html():
 def create_user(user: schema.UserSchema):
     # O Model Dump pega todos os campos de User e tranforma o modelo em dicionario
     # Esse '**' cria chave e valor de todos os campos, passando os valores para os parametros
-    user_with_id = schema.UserDB(**user.model_dump(), id=len(dataBase) + 1)
-
-    dataBase.append(user_with_id)
-
-    return user_with_id
-
+    
+    from sqlalchemy import create_engine, select
+    from fastapi_zero.settings import Settings
+    
+    from sqlalchemy.orm import Session
+    
+    engine = create_engine(Settings().DATABASE_URL) #CONEXÃO COM O BANCO DE DADOS
+    session = Session(engine)
+    
+    #SCALAR, retorna User ou None
+    db_users = session.scalar(
+        select(User).where(User.username == user.username | User.email == user.email)
+    )
+    
+    # if db_users: :
+    #     ...
+        
+   
 
 @app.get('/users/', response_model=schema.UserList, status_code=HTTPStatus.OK)
 def read_users():
