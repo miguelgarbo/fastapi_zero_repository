@@ -3,21 +3,35 @@ from fastapi_zero.app import app
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from sqlalchemy.pool import StaticPool
 
+from fastapi_zero.database import get_session
 #Pegando o Registro das Tabelas
-from fastapi_zero.models import table_registry
+from fastapi_zero.models import table_registry, User
 
 
-
+#Como no app.py a gente usa o get_session() para acessar o banco e nos testes nós não podemos acessar o banco
+#Nós iremos sobrescrever para ele pegar a session de teste, e não a do banco de dados real
+#Reseta o banco de dados em memoria a cada test
 @pytest.fixture
-def client():
-    return TestClient(app)
-
-# AQUI a gente cria a conexão com o banco de dados
+def client(session):
+    def get_session_override():
+        return session
+    
+    with TestClient(app) as client:
+        app.dependency_overrides[get_session] = get_session_override
+        yield client
+    
+    #Depois que a gambiarra for executada ele limpa tudo
+    app.dependency_overrides.clear()
+        
+# AQUI a gente cria o banco de dados em memoria para testes
 @pytest.fixture
 def session():
     #Conexão com o Banco de dados
-    engine = create_engine('sqlite:///memory:')
+    engine = create_engine('sqlite:///memory:',
+                           connect_args={'check_same_thread': False},
+                           poolclass= StaticPool)
     
     #Criação das tabelas
     table_registry.metadata.create_all(engine)
@@ -39,6 +53,19 @@ from sqlalchemy import event
 from fastapi_zero.models import User
 import datetime
 from contextlib import contextmanager
+
+@pytest.fixture
+def user(session):
+    
+    user = User(username="teste", email="teste@email.com", password="secret")
+    
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    
+    return user
+    
+
 
 
 @contextmanager

@@ -6,11 +6,13 @@ authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.13,<4.0"
-fastapi = {extras = ["standard"], version = "^0.116.1"}
+python = "^3.12,<4.0"
 sqlalchemy = "^2.0.43"
 pydantic-settings = "^2.10.1"
 alembic = "^1.16.5"
+taskipy = "^1.14.1"
+fastapi = {extras = ["standard"], version = "^0.116.1"}
+
 
 
 [tool.poetry.group.dev.dependencies]

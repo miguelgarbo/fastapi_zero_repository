@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from fastapi_zero.app import app
+from fastapi_zero.schemas import UserPublic 
 from http import HTTPStatus
 # Transformou o app do app.py em cliente pro nosso test
 # Para podermos conversar com ele(app.py)
@@ -31,7 +32,7 @@ def test_root_deve_retornar_ola_mundo(client):
 
 
 def test_getHtml_deve_retornar_html(client):
-    # client = TestClient(app)
+    # client = TestClient(a.200pp)
 
     response = client.get('/htmlEndPoint')
 
@@ -48,7 +49,7 @@ def test_create_user(client):
             'username': 'Bob',
             'email': 'bob@example.com',
             'password': 'secret',
-        },
+        }
     )
 
     assert response.status_code == HTTPStatus.CREATED
@@ -58,23 +59,36 @@ def test_create_user(client):
         'email': 'bob@example.com',
     }
 
-
-def test_read_users(client):
+def test_read_users_default(client):
+    
     response = client.get('/users')
+    
+    assert response.json() =={
+        'users': []
+    }
+    assert response.status_code == HTTPStatus.OK
 
+
+def test_read_users_with_users(client, user):
+    response = client.get('/users')
+    
+    #Ou Seja Valida se oque vai voltar vai ser o UserPublic, aquele schema sem a password, e sem createdDate
+    
+    user_schema = UserPublic.model_validate(user).model_dump()
+    
     assert response.json() == {
-        'users': [
-            {
-                'id': 1,
-                'username': 'Bob',
-                'email': 'bob@example.com',
-            }
+        'users': [user_schema
+            # {
+            #     'email': 'teste@email.com',
+            #     'id':1,
+            #     'username': 'teste'
+            # }
         ]
     }
     assert response.status_code == HTTPStatus.OK
 
 
-def test_update_user(client):
+def test_update_user(client, user):
     response = client.put(
         '/users/1',
         json={
@@ -93,27 +107,23 @@ def test_update_user(client):
     assert response.status_code == HTTPStatus.OK
     
     
-def test_delete_user(client):
+def test_delete_user(client, user):
     response = client.delete(
         '/users/1'
     )
 
-    assert response.json() == {
-        'username': 'Patrick',
-        'email': 'patrick@example.com',
-        'id': 1,
-    }
+    assert response.json() == f"Usuário {user.username} Deletado Com Sucesso"
 
     assert response.status_code == HTTPStatus.OK    
     
     
-def test_delete_user_error_validation(client):
+def test_delete_user_error_validation(client, user):
     response = client.delete(
         'users/-10'
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {'detail': 'Usuário Não Encontrado'}
+    assert response.json() == {'detail': 'Esse Usuário Não Existe'}
     
 
 
@@ -128,4 +138,28 @@ def test_update_user_error_validation(client):
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {'detail': 'Usuário Não Encontrado'}
+    assert response.json() == {'detail': 'Esse Usuário Não Existe'}
+
+
+def test_update_integrity_error(client, user):
+    
+    client.post('/users/',
+        json= {
+            'username': 'Miguel',
+            'email': 'miguel@gmail.com',
+            'password': 'secret'
+        })
+    
+    response = client.put(
+        f'/users/{user.id}',
+        json={
+            'username': 'Miguel1234',
+            'email': 'miguel@gmail.com',
+            'password': 'secret'
+            }            
+    )
+    
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.json() == {'detail': 'Username Ou Email Já exitem no Banco de Dados'}
+
+    
