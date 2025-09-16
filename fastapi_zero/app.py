@@ -147,7 +147,8 @@ def read_user(user_id: int, session: Session = Depends(get_session)):
     )
     
     if not db_user:
-        raise HTTPException("Usuário Não Encontrado")
+        raise HTTPException(detail="Usuário Não Encontrado",status_code=HTTPStatus.NOT_FOUND)
+
     
 
     return db_user

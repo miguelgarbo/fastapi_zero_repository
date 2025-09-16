@@ -162,4 +162,48 @@ def test_update_integrity_error(client, user):
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.json() == {'detail': 'Username Ou Email Já exitem no Banco de Dados'}
 
+def test_username_exist(client, user):
     
+    response = client.post('/users/', json=
+        {
+            'username': 'teste',
+            'email': 'miguel@gmail.com',
+            'password': 'secret'
+        }        
+        
+    )
+
+    assert response.status_code == HTTPStatus.CONFLICT 
+    assert response.json() == {'detail':"Esse UserName Já Existe no Banco"}
+    
+def test_email_exist(client, user):
+    
+    response = client.post('/users/', json=
+        {
+            'username': 'miguel',
+            'email': 'teste@email.com',
+            'password': 'secret'
+        }        
+        
+    )
+
+    assert response.status_code == HTTPStatus.CONFLICT 
+    assert response.json() == {'detail':"Esse Email Já Existe No Banco"}
+    
+def test_find_by_id(client, user):
+    
+
+    user_schema = UserPublic.model_validate(user).model_dump()
+
+
+    response = client.get('/users/1')
+    
+    assert response.json() == user_schema
+    assert response.status_code  == HTTPStatus.OK
+    
+def test_not_find_by_id(client, user):
+    
+    response = client.get('/users/2')
+    
+    assert response.json() == {'detail': 'Usuário Não Encontrado'}
+    assert response.status_code  == HTTPStatus.NOT_FOUND
