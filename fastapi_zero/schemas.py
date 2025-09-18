@@ -34,4 +34,8 @@ class UserPublic(BaseModel):
 class UserList(BaseModel):
     users: list[UserPublic]
 
-
+class Token(BaseModel):
+    access_token: str; # O Token jwt que vamos gerar
+    token_type: str; # O Modelo que o cliente deve usar para a autorização
+    
+    

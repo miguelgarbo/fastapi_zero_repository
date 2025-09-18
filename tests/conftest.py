@@ -53,19 +53,23 @@ from sqlalchemy import event
 from fastapi_zero.models import User
 import datetime
 from contextlib import contextmanager
+from fastapi_zero.security import get_password_hash
 
 @pytest.fixture
 def user(session):
     
-    user = User(username="teste", email="teste@email.com", password="secret")
+    password = 'teste'
+    
+    user = User(username="teste", email="teste@email.com", password=get_password_hash(password))
     
     session.add(user)
     session.commit()
     session.refresh(user)
     
-    return user
+    #Cria um atributo apenas nesse escopo 
+    user.clean_password = password;
     
-
+    return user
 
 
 @contextmanager
@@ -99,3 +103,9 @@ def _mock_db_time(*,model=User, time=datetime.datetime(2025,5,20)):
 @pytest.fixture
 def mock_db_time():
     return _mock_db_time
+
+@pytest.fixture
+def tokenGerado(client, user):
+    response = client.post('/token', data= {'username': user.email, 'password': user.clean_password})
+    
+    return response.json()['access_token']

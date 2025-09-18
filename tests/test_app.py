@@ -59,18 +59,8 @@ def test_create_user(client):
         'email': 'bob@example.com',
     }
 
-def test_read_users_default(client):
-    
-    response = client.get('/users')
-    
-    assert response.json() =={
-        'users': []
-    }
-    assert response.status_code == HTTPStatus.OK
-
-
-def test_read_users_with_users(client, user):
-    response = client.get('/users')
+def test_read_users_with_users(client, user, tokenGerado):
+    response = client.get('/users', headers={'Authorization': f'Bearer {tokenGerado}'})
     
     #Ou Seja Valida se oque vai voltar vai ser o UserPublic, aquele schema sem a password, e sem createdDate
     
@@ -88,9 +78,10 @@ def test_read_users_with_users(client, user):
     assert response.status_code == HTTPStatus.OK
 
 
-def test_update_user(client, user):
+def test_update_user(client, user, tokenGerado):
     response = client.put(
         '/users/1',
+        headers={'Authorization': f'Bearer {tokenGerado}'},
         json={
             'username': 'Patrick',
             'email': 'patrick@example.com',
@@ -107,9 +98,10 @@ def test_update_user(client, user):
     assert response.status_code == HTTPStatus.OK
     
     
-def test_delete_user(client, user):
+def test_delete_user(client, user, tokenGerado):
     response = client.delete(
-        '/users/1'
+        f'/users/{user.id}',
+        headers={'Authorization': f'Bearer {tokenGerado}'}
     )
 
     assert response.json() == f"Usuário {user.username} Deletado Com Sucesso"
@@ -117,19 +109,21 @@ def test_delete_user(client, user):
     assert response.status_code == HTTPStatus.OK    
     
     
-def test_delete_user_error_validation(client, user):
+def test_delete_user_error_validation(client, user, tokenGerado):
     response = client.delete(
-        'users/-10'
+        'users/-10',
+        headers= {'Authorization': f'Bearer {tokenGerado}'}
     )
 
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {'detail': 'Esse Usuário Não Existe'}
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.json() == {'detail': 'Sem Permissão '}
     
 
 
-def test_update_user_error_validation(client):
+def test_update_user_error_validation(client, tokenGerado):
     response = client.put(
         'users/-10',
+        headers={'Authorization': f'Bearer {tokenGerado}'},
         json={
             'username': 'Patrick',
             'email': 'patrick@example.com',
@@ -137,13 +131,14 @@ def test_update_user_error_validation(client):
         },
     )
 
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {'detail': 'Esse Usuário Não Existe'}
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.json() == {'detail': 'Sem Permissão'}
 
 
-def test_update_integrity_error(client, user):
+def test_update_integrity_error(client, user, tokenGerado):
     
     client.post('/users/',
+                
         json= {
             'username': 'Miguel',
             'email': 'miguel@gmail.com',
@@ -152,6 +147,7 @@ def test_update_integrity_error(client, user):
     
     response = client.put(
         f'/users/{user.id}',
+        headers={'Authorization': f'Bearer {tokenGerado}'},
         json={
             'username': 'Miguel1234',
             'email': 'miguel@gmail.com',
@@ -207,3 +203,16 @@ def test_not_find_by_id(client, user):
     
     assert response.json() == {'detail': 'Usuário Não Encontrado'}
     assert response.status_code  == HTTPStatus.NOT_FOUND
+    
+    
+def test_get_token(client, user):
+    
+    response = client.post("/token",
+        data={'username': user.email, 'password': user.clean_password}
+        )
+    
+    token = response.json()
+    
+    assert response.status_code == HTTPStatus.OK
+    assert 'access_token' in token
+    assert token['token_type'] == 'bearer'

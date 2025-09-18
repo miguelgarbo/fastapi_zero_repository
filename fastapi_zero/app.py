@@ -7,11 +7,33 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from fastapi_zero.database import get_session
-
+from fastapi_zero.security import get_password_hash, verify_password, create_access_token, get_current_user
+from fastapi.security import OAuth2PasswordRequestForm
 
 
 app = FastAPI(title='API To Do')
 
+@app.post('/token', response_model=schema.Token)
+def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(), 
+    session: Session = Depends(get_session),
+):
+    user = session.scalar(select(User).where(User.email == form_data.username)) 
+
+    if not user:
+        raise HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail='Incorrect email or password'
+        )
+
+    if not verify_password(form_data.password, user.password):
+        raise HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail='Incorrect email or password'
+        )
+
+    access_token = create_access_token(data={'sub': user.email})
+    return {'access_token': access_token, 'token_type': 'bearer'}
 
 @app.get(
     '/',
@@ -20,7 +42,6 @@ app = FastAPI(title='API To Do')
     response_class=response.JSONResponse,
 )
 def read_root():
-    # return {'message': "123"}
     return schema.Message(message='Olá Mundo!')
 
 
@@ -63,7 +84,7 @@ def create_user(user: schema.UserSchema, session = Depends(get_session)):
     db_user = User(
         username= user.username,
         email= user.email,
-        password= user.password,
+        password= get_password_hash(user.password),
        )
         
     session.add(db_user)
@@ -76,7 +97,8 @@ def create_user(user: schema.UserSchema, session = Depends(get_session)):
 @app.get('/users/', response_model=schema.UserList, status_code=HTTPStatus.OK)
 #Esse limit e offset é pra definir que na hora que vier a lista de users ele separe esse retorno por paginas
 #São os query params
-def read_users(limit:int =10,offset:int =0,session: Session = Depends(get_session)):
+def read_users(limit:int =10,offset:int =0,
+               session: Session = Depends(get_session), current_user = Depends(get_current_user)):
     
     users = session.scalars(
         select(User).limit(limit).offset(offset)
@@ -88,28 +110,30 @@ def read_users(limit:int =10,offset:int =0,session: Session = Depends(get_sessio
 @app.put(
     '/users/{user_id}',
     status_code=HTTPStatus.OK,
-    response_model=schema.UserPublic,
-)
-def update_user(user_id: int, userNewInfo: schema.UserSchema, session: Session = Depends(get_session)):
-   user_db = session.scalar(
-       select(User).where(User.id == user_id)
-   )
-   
-   if not user_db:
-       raise HTTPException(detail="Esse Usuário Não Existe", status_code=HTTPStatus.NOT_FOUND)
-   
-   try:
-        user_db.username = userNewInfo.username
-        user_db.email = userNewInfo.email
-        user_db.password = userNewInfo.password
-        #Manda Pro banco
-        session.commit()
-        #Atualiza o usuario atualizado para recebermos
-        session.refresh(user_db)
+    response_model=schema.UserPublic)
+def update_user(user_id: int, userNewInfo: schema.UserSchema, 
+                session: Session = Depends(get_session),
+                current_user: User = Depends(get_current_user)):
         
-        return user_db;
-   except IntegrityError:
-       raise HTTPException(detail="Username Ou Email Já exitem no Banco de Dados", status_code= HTTPStatus.CONFLICT)
+    if(current_user.id != user_id):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Sem Permissão'
+        )
+        
+    
+    try:
+            current_user.username = userNewInfo.username
+            current_user.email = userNewInfo.email
+            current_user.password = get_password_hash(userNewInfo.password)
+            #Manda Pro banco
+            session.commit()
+            #Atualiza o usuario atualizado para recebermos
+            session.refresh(current_user)
+            
+            return current_user;
+    except IntegrityError:
+        raise HTTPException(detail="Username Ou Email Já exitem no Banco de Dados", status_code= HTTPStatus.CONFLICT)
 
     
 
@@ -118,21 +142,18 @@ def update_user(user_id: int, userNewInfo: schema.UserSchema, session: Session =
     status_code=HTTPStatus.OK,
     response_model=str,
 )
-def delete_user(user_id: int, session: Session = Depends(get_session)):
-    user_db = session.scalar(
-        
-        select(User).where(User.id == user_id)
-    )
-    
-    #Se Retornar None
-    if not user_db:
-        raise HTTPException(detail="Esse Usuário Não Existe", status_code= HTTPStatus.NOT_FOUND)
+def delete_user(user_id: int, 
+                session: Session = Depends(get_session), 
+                current_user: User = Depends(get_current_user)):
+   
+    if current_user.id != user_id:
+        raise HTTPException( status_code=HTTPStatus.FORBIDDEN, detail='Sem Permissão ')
     
         
-    session.delete(user_db)
+    session.delete(current_user)
     session.commit()
     
-    return f'Usuário {user_db.username} Deletado Com Sucesso'
+    return f'Usuário {current_user.username} Deletado Com Sucesso'
     
 
 @app.get(                                                                   
