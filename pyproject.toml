@@ -37,7 +37,7 @@ extend-exclude = ['migrations']
 #Define boas praticas para padronização do codigo , ele vai seguir as regras das letras do array
 [tool.ruff.lint]
 preview = true
-select = ['I','F','E', 'W', 'PL', 'PT']
+select = ['I','F','E', 'W', 'PL', 'PT', 'FAST']
 
 #Padrão de aspas simples
 [tool.ruff.format]

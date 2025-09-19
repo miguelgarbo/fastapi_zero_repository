@@ -1,8 +1,7 @@
 # Definir uns contratos com o pydantic
 # Deixar A Api Burocratica e aprova de loucura
 # Tipo o Validation no Spring boot
-from pydantic import BaseModel, EmailStr, ConfigDict
- 
+from pydantic import BaseModel, EmailStr, ConfigDict, Field
 
 
 # Aplicando esse mano no end point ele vai definir que o corpo da requisição retorna um json, e  não uma string em formato json
@@ -30,12 +29,14 @@ class UserPublic(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-
 class UserList(BaseModel):
     users: list[UserPublic]
 
+
 class Token(BaseModel):
-    access_token: str; # O Token jwt que vamos gerar
-    token_type: str; # O Modelo que o cliente deve usar para a autorização
-    
-    
+    access_token: str  # O Token jwt que vamos gerar
+    token_type: str  # O Modelo que o cliente deve usar para a autorização
+
+class FilterPage(BaseModel):
+    offset: int = Field(ge=0, default=0 );
+    limit:int = Field(ge=0, default=10)

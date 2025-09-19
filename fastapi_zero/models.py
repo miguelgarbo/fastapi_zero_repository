@@ -2,23 +2,24 @@ from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, registry
 
-#Isso vai registrar as coisas que serao mapeadas entre a aplicacao, as tabelas python e as tabelas do banco
+# Isso vai registrar as coisas que serao mapeadas entre a aplicacao, as tabelas python e as tabelas do banco
 table_registry = registry()
 
+
 @table_registry.mapped_as_dataclass
-class User():
-    __tablename__ =  'users'
-    
+class User:
+    __tablename__ = 'users'
+
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     username: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
     email: Mapped[str] = mapped_column(unique=True)
-    
-    #Pega exatamente a hora minuto e segundo quando a requisição chegar ao banco de dados
+
+    # Pega exatamente a hora minuto e segundo quando a requisição chegar ao banco de dados
     created_at: Mapped[datetime] = mapped_column(
-        init=False, server_default=func.now())
-    
-    updated_at: Mapped[datetime] = mapped_column(
-        init=False, server_default= func.now(), onupdate=func.now()
+        init=False, server_default=func.now()
     )
-    
+
+    updated_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now(), onupdate=func.now()
+    )
