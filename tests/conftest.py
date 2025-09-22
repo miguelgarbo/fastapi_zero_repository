@@ -1,22 +1,33 @@
 from fastapi.testclient import TestClient
 from fastapi_zero.app import app
 import pytest
-from sqlalchemy import create_engine
+# from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 from fastapi_zero.settings import Settings
 
 from fastapi_zero.database import get_session
 
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+import pytest_asyncio
+
 # Pegando o Registro das Tabelas
 from fastapi_zero.models import table_registry, User
+
+from sqlalchemy import event
+
+# Importando a Tabela
+from fastapi_zero.models import User
+import datetime
+from contextlib import contextmanager
+from fastapi_zero.security import get_password_hash
 
 
 # Como no app.py a gente usa o get_session() para acessar o banco e nos testes nós não podemos acessar o banco
 # Nós iremos sobrescrever para ele pegar a session de teste, e não a do banco de dados real
 # Reseta o banco de dados em memoria a cada test
 @pytest.fixture
-def client(session):
+def client(session: AsyncSession):
     def get_session_override():
         return session
 
@@ -29,42 +40,42 @@ def client(session):
 
 
 # AQUI a gente cria o banco de dados em memoria para testes
-@pytest.fixture
-def session():
+@pytest_asyncio.fixture
+async def session():
     # Conexão com o Banco de dados
-    engine = create_engine(
-        'sqlite:///memory:',
+    engine = create_async_engine(
+        'sqlite+aiosqlite:///memory:',
         connect_args={'check_same_thread': False},
         poolclass=StaticPool,
     )
 
     # Criação das tabelas
-    table_registry.metadata.create_all(engine)
+    #Tornando a criação de tabelas não assincronas
+    async with engine.begin() as conn: 
+        await conn.run_sync(table_registry.metadata.create_all) 
 
-    # Aqui a sessão é aberta de troca entre o banco de dados e o codigo
-    # Na sessão é onde as querys ao banco serão feitas
-    with Session(engine) as session:
-        # O Yield da a sessão pra nós usarmos no teste
+    async with AsyncSession(engine, expire_on_commit=False) as session:
         yield session
 
-    # Depois de acabar a execução do códiogo que a gente queria, a gnt da um drop all
-    # Mantendo assim bom para realizar testes, mantendo limpo a cada teste
-    table_registry.metadata.drop_all(engine)
+    async with engine.begin() as conn:
+        await conn.run_sync(table_registry.metadata.drop_all)
+    
+    # # Aqui a sessão é aberta de troca entre o banco de dados e o codigo
+    # # Na sessão é onde as querys ao banco serão feitas
+    # async with Session(engine) as session:
+    #     # O Yield da a sessão pra nós usarmos no teste
+    #     yield session
+
+    # # Depois de acabar a execução do códiogo que a gente queria, a gnt da um drop all
+    # # Mantendo assim bom para realizar testes, mantendo limpo a cada teste
+    # table_registry.metadata.drop_all(engine)
 
 
 # Mentir a hora que o banco de dados persistir alguma coisa
 
-from sqlalchemy import event
 
-# Importando a Tabela
-from fastapi_zero.models import User
-import datetime
-from contextlib import contextmanager
-from fastapi_zero.security import get_password_hash
-
-
-@pytest.fixture
-def user(session):
+@pytest_asyncio.fixture
+async def user(session: AsyncSession):
     password = 'teste'
 
     user = User(
@@ -74,8 +85,8 @@ def user(session):
     )
 
     session.add(user)
-    session.commit()
-    session.refresh(user)
+    await session.commit()
+    await session.refresh(user)
 
     # Cria um atributo apenas nesse escopo
     user.clean_password = password
@@ -83,24 +94,25 @@ def user(session):
 
 
 @contextmanager
-def _mock_db_time(*, model=User, time=datetime.datetime(2025, 5, 20)):
+def _mock_db_time(*, model:User, time=datetime.datetime(2025, 5, 20)):
     def fake_time_hook(mapper, connection, target):
-        if hasattr(target, 'updated_at'):
-            target.updated_at = time
-
         # Aqui validamos se esse objeto tem o atributo, created at
         if hasattr(target, 'created_at'):
             # Ou Seja Antes de Inserir eu dou o tempo
             target.created_at = time
+            
+        if hasattr(target, 'updated_at'):
+            target.updated_at = time
 
         print(target)
 
     # Aqui é aonde antes de inserir algo na model ele vai pegar
-    event.listen(User, 'before_insert', fake_time_hook)
+    event.listen(model, 'before_insert', fake_time_hook)
 
     yield time
 
-    event.remove(User, 'before_insert', fake_time_hook)
+    event.remove(model, 'before_insert', fake_time_hook)
+    
 
 
 # Resumindo, essa fixture está configurando e limpando um banco de dados de teste para cada teste que o solicita,

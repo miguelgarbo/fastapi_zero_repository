@@ -10,6 +10,7 @@ from http import HTTPStatus
 from sqlalchemy import select
 from fastapi_zero.models import User
 from fastapi_zero.settings import Settings
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 
@@ -49,8 +50,8 @@ def create_access_token(data: dict):
 
 
 
-def get_current_user(
-    session: Session = Depends(get_session),
+async def get_current_user(
+    session: AsyncSession = Depends(get_session),
     token: str = Depends(oauth2_scheme),
 ):
     credentials_exception = HTTPException(
@@ -72,7 +73,7 @@ def get_current_user(
     except DecodeError:
         raise credentials_exception
 
-    user = session.scalar(select(User).where(User.email == subject_email))
+    user = await session.scalar(select(User).where(User.email == subject_email))
 
     if not user:
         raise credentials_exception

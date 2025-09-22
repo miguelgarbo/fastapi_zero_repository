@@ -9,15 +9,18 @@ from fastapi_zero.security import verify_password, create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+
 router = APIRouter(prefix='/auth', tags=['auth'])
 
 FormData = Annotated[OAuth2PasswordRequestForm, Depends()]
-SessionDB = Annotated[Session, Depends(get_session)]
+SessionDB = Annotated[AsyncSession, Depends(get_session)]
 
 @router.post('/token', response_model=schema.Token)
-def login_for_access_token(form_data: FormData,session: SessionDB,):
+async def login_for_access_token(form_data: FormData,session: SessionDB,):
     
-    user = session.scalar(select(User).where(User.email == form_data.username))
+    user = await session.scalar(select(User).where(User.email == form_data.username))
 
     if not user:
         raise HTTPException(

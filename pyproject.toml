@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12,<4.0"
-sqlalchemy = "^2.0.43"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.43"}
 pydantic-settings = "^2.10.1"
 alembic = "^1.16.5"
 taskipy = "^1.14.1"
@@ -15,6 +15,7 @@ fastapi = {extras = ["standard"], version = "^0.116.1"}
 pwdlib = {extras = ["argon2"], version = "^0.2.1"}
 pyjwt = "^2.10.1"
 tzdata = "^2025.2"
+aiosqlite = "^0.21.0"
 
 
 
@@ -23,6 +24,7 @@ ruff = "^0.12.12"
 pytest = "^8.4.2"
 pytest-cov = "^7.0.0"
 taskipy = "^1.14.1"
+pytest-asyncio = "^1.2.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -47,6 +49,7 @@ quote-style = 'single'
 [tool.pytest.ini_options]
 pythonpath = "."
 addopts = '-p no:warnings'
+asyncio_default_fixture_loop_scope = 'function'
 
 [tool.taskipy.tasks]
 lint = 'ruff check'
@@ -54,3 +57,7 @@ format = 'ruff format'
 run = 'fastapi dev fastapi_zero/app.py'
 test = 'pytest -s -x --cov=fastapi_zero -vv'
 post_test = 'coverage html'
+
+#Para os testes ocorrerem de forma assincrona
+[tool.coverage.run]
+concurrency = ["thread","greenlet"]
