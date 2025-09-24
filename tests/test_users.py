@@ -3,7 +3,6 @@ from http import HTTPStatus
 
 
 def test_create_user(client):
-    # client = TestClient(app)
 
     response = client.post(
         '/users',
@@ -46,7 +45,7 @@ def test_read_users_with_users(client, user, tokenGerado):
 
 def test_update_user(client, user, tokenGerado):
     response = client.put(
-        '/users/1',
+        f'/users/{user.id}',
         headers={'Authorization': f'Bearer {tokenGerado}'},
         json={
             'username': 'Patrick',
@@ -58,7 +57,7 @@ def test_update_user(client, user, tokenGerado):
     assert response.json() == {
         'username': 'Patrick',
         'email': 'patrick@example.com',
-        'id': 1,
+        'id': user.id,
     }
 
     assert response.status_code == HTTPStatus.OK
@@ -98,22 +97,15 @@ def test_update_user_error_validation(client, tokenGerado):
     assert response.json() == {'detail': 'Sem Permissão'}
 
 
-def test_update_integrity_error(client, user, tokenGerado):
-    client.post(
-        '/users/',
-        json={
-            'username': 'Miguel',
-            'email': 'miguel@gmail.com',
-            'password': 'secret',
-        },
-    )
+def test_update_integrity_error(client, user,other_user, tokenGerado):
+
 
     response = client.put(
         f'/users/{user.id}',
         headers={'Authorization': f'Bearer {tokenGerado}'},
         json={
-            'username': 'Miguel1234',
-            'email': 'miguel@gmail.com',
+            'username': other_user.username,
+            'email': other_user.email,
             'password': 'secret',
         },
     )
@@ -128,7 +120,7 @@ def test_username_exist(client, user):
     response = client.post(
         '/users/',
         json={
-            'username': 'teste',
+            'username': f'{user.username}',
             'email': 'miguel@gmail.com',
             'password': 'secret',
         },
@@ -143,7 +135,7 @@ def test_email_exist(client, user):
         '/users/',
         json={
             'username': 'miguel',
-            'email': 'teste@email.com',
+            'email': f'{user.email}',
             'password': 'secret',
         },
     )
@@ -166,3 +158,16 @@ def test_not_find_by_id(client, user):
 
     assert response.json() == {'detail': 'Usuário Não Encontrado'}
     assert response.status_code == HTTPStatus.NOT_FOUND
+
+def test_update_user_with_wrong_user(client,other_user, tokenGerado):
+    response = client.put(
+        f'/users/{other_user.id}',
+        headers={'Authorization': f'Bearer {tokenGerado}'},
+        json={
+            'username': 'Miguel',
+            'email': 'miguel@example.com',
+            'password': 'newPassword'
+            
+        })
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.json() == {'detail':'Sem Permissão'}

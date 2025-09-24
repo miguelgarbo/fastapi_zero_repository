@@ -22,6 +22,8 @@ import datetime
 from contextlib import contextmanager
 from fastapi_zero.security import get_password_hash
 
+import factory
+
 
 # Como no app.py a gente usa o get_session() para acessar o banco e nos testes nós não podemos acessar o banco
 # Nós iremos sobrescrever para ele pegar a session de teste, e não a do banco de dados real
@@ -78,9 +80,25 @@ async def session():
 async def user(session: AsyncSession):
     password = 'teste'
 
-    user = User(
-        username='teste',
-        email='teste@email.com',
+    user = UserFactory(
+       
+        password=get_password_hash(password),
+    )
+
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    # Cria um atributo apenas nesse escopo
+    user.clean_password = password
+    return user
+
+@pytest_asyncio.fixture
+async def other_user(session: AsyncSession):
+    password = 'teste2'
+
+    user = UserFactory(
+       
         password=get_password_hash(password),
     )
 
@@ -134,3 +152,16 @@ def tokenGerado(client, user):
 @pytest.fixture
 def settings():
     return Settings();
+
+#Criação de usuarios para testes
+#Toda Vez que essa função for chamada ele cria um usuario novo
+class UserFactory(factory.Factory):
+    class Meta:
+        model = User
+        
+    #Apenas os atributos não inits    
+    username = factory.sequence(lambda n: f'test{n}')
+    #Esse lazy é para esse campo ser avaliado tardiamente, por isso o nome lazy(preguiçoso)
+    #No Nosso Caso vai ser util pq o email vai esperar o username para poder usar o nome do user no email
+    email = factory.LazyAttribute(lambda obj: f'{obj.username}@test.com')
+    password = factory.LazyAttribute(lambda obj: f'{obj.username}123#')

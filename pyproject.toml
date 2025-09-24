@@ -16,6 +16,7 @@ pwdlib = {extras = ["argon2"], version = "^0.2.1"}
 pyjwt = "^2.10.1"
 tzdata = "^2025.2"
 aiosqlite = "^0.21.0"
+freezegun = "^1.5.5"
 
 
 
@@ -25,6 +26,8 @@ pytest = "^8.4.2"
 pytest-cov = "^7.0.0"
 taskipy = "^1.14.1"
 pytest-asyncio = "^1.2.0"
+factory-boy = "^3.3.3"
+freezegun = "^1.5.5"
 
 [build-system]
 requires = ["poetry-core"]

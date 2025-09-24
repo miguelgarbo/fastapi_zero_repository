@@ -81,8 +81,6 @@ async def run_async_migrations_online():
 
     await connectable.dispose()
 
-
-
 def run_migrations_online() -> None:
     asyncio.run(run_async_migrations_online())
 

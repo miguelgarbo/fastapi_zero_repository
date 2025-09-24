@@ -16,5 +16,6 @@ app.include_router(users.router)
     response_model=schema.Message,
     response_class=response.JSONResponse,
 )
-def read_root():
+async def read_root():
     return schema.Message(message='Olá Mundo!')
+

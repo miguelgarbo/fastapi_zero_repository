@@ -1,9 +1,8 @@
 from pwdlib import PasswordHash
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-from jwt import encode, decode, DecodeError
+from jwt import encode, decode, DecodeError, ExpiredSignatureError
 from fastapi_zero.database import get_session
-from sqlalchemy.orm import Session
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from http import HTTPStatus
@@ -11,9 +10,6 @@ from sqlalchemy import select
 from fastapi_zero.models import User
 from fastapi_zero.settings import Settings
 from sqlalchemy.ext.asyncio import AsyncSession
-
-
-
 
 # Criar um contexto de criptografia
 # Nós pegamos as recomendações da biblioteca
@@ -71,6 +67,9 @@ async def get_current_user(
             raise credentials_exception
 
     except DecodeError:
+        raise credentials_exception
+    
+    except ExpiredSignatureError:
         raise credentials_exception
 
     user = await session.scalar(select(User).where(User.email == subject_email))

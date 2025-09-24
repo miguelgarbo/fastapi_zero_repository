@@ -65,3 +65,4 @@ def test_get_current_user_does_not_exists__exercicio(client):
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.json() == {'detail': 'Não foi Possivel Autorizar'}
+    

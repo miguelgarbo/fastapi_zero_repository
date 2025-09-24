@@ -7,7 +7,7 @@ engine = create_async_engine(Settings().DATABASE_URL)  # CONEXÃO COM O BANCO DE
 session = Session(engine)
 
 
-async def get_session():
+async def get_session(): #pragma: no cover
     async with AsyncSession(engine, expire_on_commit=False) as session:
         # Usamos o Yield pra nao parar a sessão, pois com o return a função quebra a execução e não é isso que queremos
         yield session
