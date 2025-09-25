@@ -16,7 +16,7 @@ router = APIRouter(prefix='/users', tags=['users'])
 
 SessionDB = Annotated[AsyncSession, Depends(get_session)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
-FilterUsers = Annotated[schema.FilterPage, Query()]
+FilterPage = Annotated[schema.FilterPage, Query()]
 
 
 @router.post(
@@ -64,7 +64,7 @@ async def create_user(user: schema.UserSchema, session: SessionDB):
 async def read_users(
     current_user: CurrentUser,
     session: SessionDB,
-    filter_page: FilterUsers
+    filter_page: FilterPage
 ):
     users = await session.scalars(select(User).limit(filter_page.limit).offset(filter_page.offset))
 

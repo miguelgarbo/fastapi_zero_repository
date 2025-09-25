@@ -1,8 +1,8 @@
+import factory.fuzzy
 from fastapi.testclient import TestClient
 from fastapi_zero.app import app
 import pytest
 # from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 from fastapi_zero.settings import Settings
 
@@ -12,17 +12,18 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 import pytest_asyncio
 
 # Pegando o Registro das Tabelas
-from fastapi_zero.models import table_registry, User
+from fastapi_zero.models import table_registry, User, TodoState
 
 from sqlalchemy import event
 
 # Importando a Tabela
-from fastapi_zero.models import User
+from fastapi_zero.models import User, Todo
 import datetime
 from contextlib import contextmanager
 from fastapi_zero.security import get_password_hash
 
 import factory
+from faker import Faker
 
 
 # Como no app.py a gente usa o get_session() para acessar o banco e nos testes nós não podemos acessar o banco
@@ -165,3 +166,12 @@ class UserFactory(factory.Factory):
     #No Nosso Caso vai ser util pq o email vai esperar o username para poder usar o nome do user no email
     email = factory.LazyAttribute(lambda obj: f'{obj.username}@test.com')
     password = factory.LazyAttribute(lambda obj: f'{obj.username}123#')
+    
+class TodoFactory(factory.Factory):
+    class Meta:
+        model = Todo
+        
+    title = factory.Faker('text')
+    description = factory.Faker('text')
+    state = factory.fuzzy.FuzzyChoice(TodoState)
+    user_id = 1 
