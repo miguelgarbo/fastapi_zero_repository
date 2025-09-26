@@ -60,11 +60,7 @@ async def delete_todo(todo_id: int, session: Session, user: CurrentUser):
     if not todo:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, 
                             detail="Tarefa Não Encontrada")
-    if todo.user_id != user.id:
-         raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, 
-                            detail="Não Autorizado A Deletar Tarefa de Outro Usuário")
-        
-    
+  
     await session.delete(todo)
     await session.commit()
     

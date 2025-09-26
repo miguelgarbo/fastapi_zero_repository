@@ -2,11 +2,13 @@ from datetime import datetime
 from sqlalchemy import func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, registry, relationship
 from enum import Enum
-
+# from __future__ import annotations
 
 # Isso vai registrar as coisas que serao mapeadas entre a aplicacao, as tabelas python e as tabelas do banco
 table_registry = registry()
 
+
+#Func.Now() pega  o tempo atual do banco
 
 @table_registry.mapped_as_dataclass
 class User:
@@ -26,7 +28,8 @@ class User:
         init=False, server_default=func.now(), onupdate=func.now()
     )
     
-    todos: Mapped[list['Todo']] = relationship( init=False, cascade='all, delete-orphan', lazy='selectin')
+    # todos: Mapped[list['Todo']] = relationship(
+    #     init=False, cascade='all, delete-orphan', lazy='selectin')
     
 class TodoState(str, Enum):
     draft = 'draft',
@@ -42,7 +45,17 @@ class Todo:
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     title: Mapped[str] 
     description: Mapped[str]
-    state: Mapped[TodoState]
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    state: Mapped[TodoState]    
     
+    # created_at: Mapped[datetime] = mapped_column(
+    #     init=False, server_default=func.now()
+    # )
+    # updated_at: Mapped[datetime] = mapped_column(
+    #     init=False, server_default=func.now(), onupdate=func.now()
+    # )
+    
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    # user: Mapped[User] = relationship(init=False, back_populates='todos')
+
+
         

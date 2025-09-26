@@ -3,7 +3,7 @@
 # Tipo o Validation no Spring boot
 from pydantic import BaseModel, EmailStr, ConfigDict, Field
 from fastapi_zero.models import TodoState
-
+from datetime import datetime
 
 # Aplicando esse mano no end point ele vai definir que o corpo da requisição retorna um json, e  não uma string em formato json
 # Impede de enviar informaões erradas
@@ -27,15 +27,19 @@ class TodoSchema(BaseModel):
 # Porem Quero Retornar apenas o necessario para o cliente
 # Assim Criamos o UserPublic
 
-
 class UserPublic(BaseModel):
     id: int
     username: str
     email: EmailStr
+    # created_at: datetime
+    # updated_at: datetime
     model_config = ConfigDict(from_attributes=True)
     
 class TodoPublic(TodoSchema):
     id:int
+    
+    # created_at: datetime
+    # updated_at: datetime
 
 
 class UserList(BaseModel):

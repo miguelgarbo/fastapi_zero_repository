@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 @pytest.mark.asyncio 
 async def test_create_user(session: AsyncSession, mock_db_time):
+    
     with mock_db_time(model=User, time=datetime.now()) as time:
         new_user = User(
             username='test', email='test@gmail.com', password='secret'

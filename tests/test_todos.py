@@ -5,22 +5,29 @@ from fastapi_zero.schemas import UserPublic
 from http import HTTPStatus
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from tests.conftest import TodoFactory
+from fastapi_zero.models import Todo, TodoState
 
-def test_create_todo(client, user, tokenGerado):
-    response = client.post('/todos/', 
+def test_create_todo(client, user, tokenGerado, mock_db_time):
+    
+        response = client.post('/todos/', 
                            headers={'Authorization': f'Bearer {tokenGerado}'},
                            json={
                                'title': 'Test Todo',
                                'description': 'Descricao Test',
-                               'state': 'todo'})
+                               'state': 'todo'
+                               }
+                           )
     
-    assert response.status_code == HTTPStatus.CREATED
-    assert response.json() == {
-                                'id': 1,
-                               'title': 'Test Todo',
-                               'description': 'Descricao Test',
-                               'state': 'todo'}
+        assert response.status_code == HTTPStatus.CREATED
+        assert response.json() == {
+                                    'id': 1,
+                                'title': 'Test Todo',
+                                'description': 'Descricao Test',
+                                'state': 'todo',
+
+                                }
     
 def test_read_todo(client, tokenGerado):
     response = client.get('/todos/',
@@ -166,6 +173,92 @@ def test_patch_not_exist_todo(client, tokenGerado):
     
     assert response.json() == {'detail': 'Tarefa Não Encontrada'}
     assert response.status_code == HTTPStatus.NOT_FOUND
+
+@pytest.mark.asyncio
+async def test_list_todos_should_return_all_field(session,client, tokenGerado, user, mock_db_time):
     
+    todo = TodoFactory.create(user_id = user.id)
+    session.add(todo)
+    await session.commit()
+        
+    await session.refresh(todo)
+    response = client.get('/todos/',
+                             headers={'Authorization': f'Bearer {tokenGerado}'})
     
+    assert response.json()['todos'] == [{
+        'description': todo.description,
+        'id': todo.id,
+        'state': todo.state,
+        'title': todo.title,
+    }]
+   
+@pytest.mark.asyncio
+async def test_create_todo_error(client, user, tokenGerado, session):
     
+     todo = Todo(
+        title="Teste",
+        description="Teste123",
+        state="teste",
+        user_id=user.id
+     )
+     
+     session.add(todo)
+     await session.commit()
+     
+     with pytest.raises(LookupError):
+        await session.scalar(select(Todo))
+    
+@pytest.mark.asyncio
+async def test_list_todos_should_return_all_expected_fields__exercicio(
+    session, client, user, tokenGerado, mock_db_time
+):
+    todo = TodoFactory.create(user_id=user.id)
+    session.add(todo)
+    await session.commit()
+
+    await session.refresh(todo)
+    response = client.get(
+        '/todos/',
+        headers={'Authorization': f'Bearer {tokenGerado}'},
+    )
+
+    assert response.json()['todos'] == [{
+        'description': todo.description,
+        'id': todo.id,
+        'state': todo.state,
+        'title': todo.title,
+    }]
+    
+@pytest.mark.asyncio
+async def test_create_todo_error(session, user):
+    todo = Todo(
+        title='Test Todo',
+        description='Test Desc',
+        state='test',
+        user_id=user.id,
+    )
+
+    session.add(todo)
+    await session.commit()
+
+    with pytest.raises(LookupError):
+        await session.scalar(select(Todo))
+        
+def test_list_todos_filter_min_length_exercicio_06(client, tokenGerado):
+    tiny_string = 'a'
+    response = client.get(
+        f'/todos/?title={tiny_string}',
+        headers={'Authorization': f'Bearer {tokenGerado}'},
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_list_todos_filter_max_length_exercicio_06(client, tokenGerado):
+    large_string = 'a' * 22
+    response = client.get(
+        f'/todos/?title={large_string}',
+        headers={'Authorization': f'Bearer {tokenGerado}'},
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY

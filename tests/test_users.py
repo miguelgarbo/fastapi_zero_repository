@@ -1,23 +1,26 @@
 from fastapi_zero.schemas import UserPublic
 from http import HTTPStatus
+from fastapi_zero.models import User
 
 
-def test_create_user(client):
+def test_create_user(client, mock_db_time):
 
+    # with mock_db_time(model=User) as time:
     response = client.post(
-        '/users',
-        json={
-            'username': 'Bob',
-            'email': 'bob@example.com',
-            'password': 'secret',
-        },
-    )
+            '/users',
+            json={
+                'username': 'Bob',
+                'email': 'bob@example.com',
+                'password': 'secret',
+            },
+        )
 
     assert response.status_code == HTTPStatus.CREATED
     assert response.json() == {
         'id': 1,
         'username': 'Bob',
         'email': 'bob@example.com',
+       
     }
 
 
@@ -29,6 +32,7 @@ def test_read_users_with_users(client, user, tokenGerado):
     # Ou Seja Valida se oque vai voltar vai ser o UserPublic, aquele schema sem a password, e sem createdDate
 
     user_schema = UserPublic.model_validate(user).model_dump()
+    
 
     assert response.json() == {
         'users': [

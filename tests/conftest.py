@@ -46,11 +46,7 @@ def client(session: AsyncSession):
 @pytest_asyncio.fixture
 async def session():
     # Conexão com o Banco de dados
-    engine = create_async_engine(
-        'sqlite+aiosqlite:///memory:',
-        connect_args={'check_same_thread': False},
-        poolclass=StaticPool,
-    )
+    engine = create_async_engine(Settings().DATABASE_URL)
 
     # Criação das tabelas
     #Tornando a criação de tabelas não assincronas
