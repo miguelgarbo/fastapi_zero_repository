@@ -46,8 +46,7 @@ def client(session: AsyncSession):
 #esse scope session, signifca que essa fixture vai rodar uma vez  a cada execução de todos os testes, por padrão esse scope é function que seria a cada vez q essa função é chamada
 @pytest.fixture(scope='session')
 def engine():
-        # Conexão com o Banco de dados
-
+        # Conexão com o Banco de dados , que é um container que sobe a cada execução de teste
      with PostgresContainer('postgres:17',driver='psycopg') as postgresDB:
         engine = create_async_engine(postgresDB.get_connection_url())
         yield engine

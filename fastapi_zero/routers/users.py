@@ -126,7 +126,7 @@ async def delete_user(user_id: int, session: SessionDB, current_user: CurrentUse
     status_code=HTTPStatus.OK,
     response_model=schema.UserPublic,
 )
-async def read_user(user_id: int, session: SessionDB):
+async def read_user(user_id: int, session: SessionDB, current_user: CurrentUser):
     db_user = await session.scalar(select(User).where(User.id == user_id))
 
     if not db_user:
