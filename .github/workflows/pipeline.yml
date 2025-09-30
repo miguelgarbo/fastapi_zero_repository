@@ -9,7 +9,7 @@ jobs:
 
       - name: Copiar Arquivos do Repositório
         uses: actions/checkout@v4
-        
+
       - name: Instalar Python
         uses: actions/setup-python@v5
         with:
@@ -23,5 +23,12 @@ jobs:
       
       - name: Executar Testes
         run: poetry run task test 
+
+    env:
+      DATABASE_URL: ${{secrets.DATABASE_URL}}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${{secrets.ACCESS_TOKEN_EXPIRE_MINUTES}}
+      ALGORITHM: ${{secrets.ALGORITHM}}
+      SECRET_KEY: ${{secrets.SECRET_KEY}}
+
 
       
