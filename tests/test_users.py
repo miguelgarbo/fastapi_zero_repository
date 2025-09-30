@@ -148,17 +148,20 @@ def test_email_exist(client, user):
     assert response.json() == {'detail': 'Esse Email Já Existe No Banco'}
 
 
-def test_find_by_id(client, user):
+def test_find_by_id(client, user, tokenGerado):
     user_schema = UserPublic.model_validate(user).model_dump()
 
-    response = client.get('/users/1')
+    response = client.get(f'/users/{user.id}',
+                          headers={'Authorization': f'Bearer {tokenGerado}'})
 
     assert response.json() == user_schema
     assert response.status_code == HTTPStatus.OK
 
 
-def test_not_find_by_id(client, user):
-    response = client.get('/users/2')
+def test_not_find_by_id(client, user, tokenGerado):
+    response = client.get('/users/10',
+                          headers={'Authorization': f'Bearer {tokenGerado}'}
+                          )
 
     assert response.json() == {'detail': 'Usuário Não Encontrado'}
     assert response.status_code == HTTPStatus.NOT_FOUND
