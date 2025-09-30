@@ -15,7 +15,7 @@ jobs:
         run: pipx install poetry
 
       - name: Instalar Dependências
-        run: pipx install poetry
+        run: poetry install poetry
       
       - name: Executar Testes
         run: poetry run task test 
