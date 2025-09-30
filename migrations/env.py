@@ -9,6 +9,13 @@ from sqlalchemy import pool
 from alembic import context
 from fastapi_zero.settings import Settings
 from fastapi_zero.models import table_registry
+
+import asyncio
+import sys
+
+# ...
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 #   A APLICAÇÃO E O BANCO VÃO DESAGUAR TUDO AQUI NAS MIGRATIONS
 #   PARA NÓS TERMOS AS VERSÕES DO BANCO 
 

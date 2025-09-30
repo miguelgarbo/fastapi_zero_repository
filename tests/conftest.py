@@ -25,6 +25,8 @@ from fastapi_zero.security import get_password_hash
 import factory
 from faker import Faker
 
+from testcontainers.postgres import PostgresContainer
+
 
 # Como no app.py a gente usa o get_session() para acessar o banco e nos testes nós não podemos acessar o banco
 # Nós iremos sobrescrever para ele pegar a session de teste, e não a do banco de dados real
@@ -41,36 +43,29 @@ def client(session: AsyncSession):
     # Depois que a gambiarra for executada ele limpa tudo
     app.dependency_overrides.clear()
 
+#esse scope session, signifca que essa fixture vai rodar uma vez  a cada execução de todos os testes, por padrão esse scope é function que seria a cada vez q essa função é chamada
+@pytest.fixture(scope='session')
+def engine():
+        # Conexão com o Banco de dados
 
-# AQUI a gente cria o banco de dados em memoria para testes
+     with PostgresContainer('postgres:17',driver='psycopg') as postgresDB:
+        engine = create_async_engine(postgresDB.get_connection_url())
+        yield engine
+
 @pytest_asyncio.fixture
-async def session():
-    # Conexão com o Banco de dados
-    engine = create_async_engine(Settings().DATABASE_URL)
+async def session(engine):    
 
-    # Criação das tabelas
-    #Tornando a criação de tabelas não assincronas
+        # Criação das tabelas
+        #Tornando a criação de tabelas não assincronas
     async with engine.begin() as conn: 
-        await conn.run_sync(table_registry.metadata.create_all) 
+         await conn.run_sync(table_registry.metadata.create_all) 
 
     async with AsyncSession(engine, expire_on_commit=False) as session:
         yield session
 
     async with engine.begin() as conn:
         await conn.run_sync(table_registry.metadata.drop_all)
-    
-    # # Aqui a sessão é aberta de troca entre o banco de dados e o codigo
-    # # Na sessão é onde as querys ao banco serão feitas
-    # async with Session(engine) as session:
-    #     # O Yield da a sessão pra nós usarmos no teste
-    #     yield session
-
-    # # Depois de acabar a execução do códiogo que a gente queria, a gnt da um drop all
-    # # Mantendo assim bom para realizar testes, mantendo limpo a cada teste
-    # table_registry.metadata.drop_all(engine)
-
-
-# Mentir a hora que o banco de dados persistir alguma coisa
+        
 
 
 @pytest_asyncio.fixture

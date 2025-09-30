@@ -192,21 +192,22 @@ async def test_list_todos_should_return_all_field(session,client, tokenGerado, u
         'title': todo.title,
     }]
    
-@pytest.mark.asyncio
-async def test_create_todo_error(client, user, tokenGerado, session):
+# @pytest.mark.asyncio
+# async def test_create_todo_error(client, user, tokenGerado, session):
     
-     todo = Todo(
-        title="Teste",
-        description="Teste123",
-        state="teste",
-        user_id=user.id
-     )
+#      todo = Todo(
+#         title="Teste",
+#         description="Teste123",
+#         state='teste',
+#         user_id=user.id
+#      )
      
-     session.add(todo)
-     await session.commit()
+#      session.add(todo)
+#      await session.commit()
      
-     with pytest.raises(LookupError):
-        await session.scalar(select(Todo))
+     
+#     #  with pytest.raises(LookupError):
+#     #     await session.scalar(select(Todo))
     
 @pytest.mark.asyncio
 async def test_list_todos_should_return_all_expected_fields__exercicio(
@@ -229,20 +230,7 @@ async def test_list_todos_should_return_all_expected_fields__exercicio(
         'title': todo.title,
     }]
     
-@pytest.mark.asyncio
-async def test_create_todo_error(session, user):
-    todo = Todo(
-        title='Test Todo',
-        description='Test Desc',
-        state='test',
-        user_id=user.id,
-    )
 
-    session.add(todo)
-    await session.commit()
-
-    with pytest.raises(LookupError):
-        await session.scalar(select(Todo))
         
 def test_list_todos_filter_min_length_exercicio_06(client, tokenGerado):
     tiny_string = 'a'

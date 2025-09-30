@@ -27,6 +27,8 @@ FilterPage = Annotated[schema.FilterPage, Query()]
 async def create_user(user: schema.UserSchema, session: SessionDB):
     # SCALAR, retorna um User ou None
     # Aqui ele retorna os iguais dai no if ele quebra com um erro
+    
+    
     db_user = await session.scalar(
         select(User).where(
             (User.username == user.username) | (User.email == user.email)

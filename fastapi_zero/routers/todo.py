@@ -1,13 +1,14 @@
 from fastapi import HTTPException, Depends, APIRouter, Query
 from http import HTTPStatus
 import fastapi_zero.schemas as schema
-from fastapi_zero.models import User, Todo
+from fastapi_zero.models import User, Todo, TodoState
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from fastapi_zero.database import get_session
 from fastapi_zero.security import get_current_user
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
+ 
 
 router = APIRouter(prefix='/todos', tags=['todos'])
 
@@ -22,6 +23,10 @@ async def create_todo(todo:schema.TodoSchema
     
     todo_new = Todo(user_id=currentUser.id, title=todo.title, 
                 description=todo.description, state = todo.state)
+    
+    # for state in TodoState:
+    #     if todo_new.state != state:
+    #         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="A Tarefa Deve Ter um State Válido")
     
     sessionAsync.add(todo_new)
     await sessionAsync.commit()

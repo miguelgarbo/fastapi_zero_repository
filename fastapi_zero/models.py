@@ -6,8 +6,6 @@ from enum import Enum
 
 # Isso vai registrar as coisas que serao mapeadas entre a aplicacao, as tabelas python e as tabelas do banco
 table_registry = registry()
-
-
 #Func.Now() pega  o tempo atual do banco
 
 @table_registry.mapped_as_dataclass
